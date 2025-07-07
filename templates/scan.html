@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block title %}Domain Scanner | Fox Recon{% endblock %}
+
+{% block hero %}
+<div class="hero">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1 class="display-4 fw-bold mb-4">Smart Reconnaissance for Bug Bounty</h1>
+                <p class="lead mb-4">Fox Recon helps you discover subdomains, analyze security risks, and find high-value targets with AI-powered insights.</p>
+                <div class="d-flex gap-3">
+                    <a href="#scanForm" class="btn btn-primary btn-lg px-4">Start Scanning</a>
+                    <a href="#features" class="btn btn-outline-primary btn-lg px-4">Learn More</a>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <img src="https://placehold.co/600x400/orange/white?text=Fox+Recon" alt="Fox Recon" class="img-fluid rounded-3 shadow">
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<section id="scanForm" class="my-5 py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white">
+                        <h4 class="mb-0"><i class="bi bi-search fox-icon"></i> Domain Scanner</h4>
+                    </div>
+                    <div class="card-body">
+                        <form id="scanForm">
+                            <div class="mb-4">
+                                <label for="domainInput" class="form-label fw-bold">Target Domain</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">https://</span>
+                                    <input type="text" class="form-control form-control-lg" id="domainInput" placeholder="example.com" required>
+                                </div>
+                                <div class="form-text">Enter the domain you want to scan (e.g., example.com)</div>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-lg" id="scanButton">
+                                <i class="bi bi-search"></i> Start Scan
+                            </button>
+                        </form>
+                        
+                        <div id="scanProgress" class="mt-4" style="display: none;">
+                            <h5>Scan Progress</h5>
+                            <div class="mb-2">
+                                <span id="currentTask">Initializing scan...</span>
+                                <span class="float-end" id="progressPercent">0%</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%; background-color: var(--primary-color);"></div>
+                            </div>
+                            <div class="mt-2">
+                                <small class="text-muted" id="scanIdDisplay">Scan ID: </small>
+                            </div>
+                            
+                            <div class="mt-4" id="resultsSection" style="display: none;">
+                                <div class="alert alert-success">
+                                    <i class="bi bi-check-circle"></i> Scan completed successfully!
+                                </div>
+                                <div class="d-flex gap-3">
+                                    <a href="#" id="viewResultsBtn" class="btn btn-success">
+                                        <i class="bi bi-eye"></i> View Results
+                                    </a>
+                                    <a href="#" id="exportResultsBtn" class="btn btn-outline-secondary">
+                                        <i class="bi bi-download"></i> Export Report
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="features" class="my-5 py-5 bg-light">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">Powerful Reconnaissance Features</h2>
+            <p class="lead text-muted">Everything you need for effective bug bounty reconnaissance</p>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-globe feature-icon"></i>
+                        <h4>Subdomain Discovery</h4>
+                        <p>Find all subdomains associated with your target domain, including hidden and forgotten ones.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-shield-check feature-icon"></i>
+                        <h4>Risk Assessment</h4>
+                        <p>AI-powered analysis of security risks and vulnerabilities in your discovered assets.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-bullseye feature-icon"></i>
+                        <h4>High-Value Targets</h4>
+                        <p>Prioritize your testing with automatically identified high-value targets.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    let currentScanId = null;
+    let statusCheckInterval = null;
+    
+    $('#scanForm').submit(function(e) {
+        e.preventDefault();
+        
+        const domain = $('#domainInput').val().trim();
+        if (!domain) {
+            alert('Please enter a domain to scan');
+            return;
+        }
+        
+        $('#scanButton').prop('disabled', true).html('<i class="bi bi-hourglass"></i> Starting Scan...');
+        $('#scanProgress').show();
+        
+        // Start the scan
+        $.ajax({
+            url: '/start_scan',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ domain: domain }),
+            success: function(response) {
+                currentScanId = response.scan_id;
+                $('#scanIdDisplay').text('Scan ID: ' + currentScanId);
+                $('#scanButton').html('<i class="bi bi-search"></i> Start New Scan');
+                $('#scanButton').prop('disabled', false);
+                
+                // Start checking status
+                statusCheckInterval = setInterval(checkScanStatus, 2000);
+            },
+            error: function(xhr) {
+                alert('Error starting scan: ' + xhr.responseJSON.error);
+                $('#scanButton').prop('disabled', false).html('<i class="bi bi-search"></i> Start Scan');
+            }
+        });
+    });
+    
+    function checkScanStatus() {
+        if (!currentScanId) return;
+        
+        $.get('/scan_status/' + currentScanId, function(status) {
+            $('#progressBar').css('width', status.progress + '%');
+            $('#progressPercent').text(status.progress + '%');
+            $('#currentTask').text(status.current_task);
+            
+            if (status.status === 'completed') {
+                clearInterval(statusCheckInterval);
+                $('#progressBar').removeClass('progress-bar-animated').removeClass('progress-bar-striped');
+                $('#resultsSection').show();
+                $('#viewResultsBtn').attr('href', '/results/' + currentScanId);
+                $('#exportResultsBtn').attr('href', '/export/' + currentScanId + '?format=pdf');
+            } else if (status.status === 'error') {
+                clearInterval(statusCheckInterval);
+                $('#scanProgress').append(
+                    '<div class="alert alert-danger mt-3">' +
+                    '<i class="bi bi-exclamation-triangle"></i> Scan failed: ' + status.error +
+                    '</div>'
+                );
+            }
+        }).fail(function() {
+            clearInterval(statusCheckInterval);
+            $('#scanProgress').append(
+                '<div class="alert alert-danger mt-3">' +
+                '<i class="bi bi-exclamation-triangle"></i> Failed to check scan status' +
+                '</div>'
+            );
+        });
+    }
+});
+</script>
+{% endblock %}
