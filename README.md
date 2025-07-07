@@ -51,7 +51,7 @@ A comprehensive web-based security reconnaissance tool that automates subdomain 
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/IlyassCODEX/FOXRECON-v2.0/FOXRECON-v2.0.git
+   git clone https://github.com/IlyassCODEX/FOXRECON-v2.0.git
    cd FOXRECON-v2.0
    sudo apt update && sudo apt install -y python3 python3-pip nmap python3-dev build-essential libssl-dev libffi-dev
    pip install -r requirements.txt
