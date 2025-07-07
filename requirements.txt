@@ -1,0 +1,10 @@
+Flask==2.3.2
+python-nmap==0.7.1
+requests==2.31.0
+dnspython==2.4.2
+beautifulsoup4==4.12.2
+reportlab==4.0.4
+urllib3==1.26.16
+cachetools==5.3.1
+ipaddress==1.0.23
+lxml==4.9.3
